@@ -241,7 +241,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 		float speed = specifics.getKineticSpeed();
 		if (speed == 0)
 			return 0;
-		return (int) Mth.lerp(Mth.clamp(Math.abs(speed) / 512f, 0, 1), 1, 60);
+		return (int) Mth.lerp(Mth.clamp(Math.abs(speed) / 512f, 0, 1), 0, 60);
 	}
 
 	protected void spawnParticles() {

@@ -41,8 +41,6 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 	public boolean finished;
 	public Mode mode;
 
-	private boolean ticksPaused;
-
 	int entityScanCooldown;
 
 	public interface PressingBehaviourSpecifics {
@@ -172,13 +170,6 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 			return;
 		}
 
-		/*
-		if (level.isClientSide && ticksPaused) {
-			prevRunningTicks = CYCLE / 2;
-			return;
-		}
-		*/
-
 		if (runningTicks >= CYCLE / 2 && !finished) {
 			if (inWorld())
 				applyInWorld();
@@ -209,13 +200,6 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 
 		prevRunningTicks = runningTicks;
 		runningTicks += getRunningTickSpeed();
-		/*
-		if (prevRunningTicks < CYCLE / 2 && runningTicks >= CYCLE / 2) {
-			// Pause the ticks until a packet is received
-			if (level.isClientSide && !blockEntity.isVirtual())
-				ticksPaused = true;
-		}
-		*/
 	}
 
 	protected void applyOnBasin() {

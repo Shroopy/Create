@@ -94,8 +94,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 		super.write(compound, clientPacket);
 
 		if (clientPacket) {
-			compound.put("ParticleItems",
-					NBTHelper.writeCompoundList(particleItems, NBTSerializer::serializeNBTCompound));
+			compound.put("ParticleItems", NBTHelper.writeCompoundList(particleItems, ItemStack::serializeNBT));
 			particleItems.clear();
 		}
 	}

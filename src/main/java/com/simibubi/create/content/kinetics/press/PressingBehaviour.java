@@ -153,13 +153,13 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 				entityScanCooldown = ENTITY_SCAN;
 
 				if (BlockEntityBehaviour.get(level, worldPosition.below(2),
-						TransportedItemStackHandlerBehaviour.TYPE) != null)
+					TransportedItemStackHandlerBehaviour.TYPE) != null)
 					return;
 				if (BasinBlock.isBasin(level, worldPosition.below(2)))
 					return;
 
 				for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class,
-						new AABB(worldPosition.below()).deflate(.125f))) {
+					new AABB(worldPosition.below()).deflate(.125f))) {
 					if (!itemEntity.isAlive() || !itemEntity.onGround())
 						continue;
 					if (!specifics.tryProcessInWorld(itemEntity, true))
@@ -189,7 +189,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 				AllSoundEvents.MECHANICAL_PRESS_ACTIVATION_ON_BELT.playOnServer(level, worldPosition);
 			else
 				AllSoundEvents.MECHANICAL_PRESS_ACTIVATION.playOnServer(level, worldPosition, .5f,
-						.75f + (Math.abs(specifics.getKineticSpeed()) / 1024f));
+					.75f + (Math.abs(specifics.getKineticSpeed()) / 1024f));
 
 			if (!level.isClientSide)
 				blockEntity.sendData();
@@ -267,11 +267,10 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 
 		if (mode == Mode.BASIN)
 			particleItems
-					.forEach(stack -> makeCompactingParticleEffect(VecHelper.getCenterOf(worldPosition.below(2)),
-							stack));
+				.forEach(stack -> makeCompactingParticleEffect(VecHelper.getCenterOf(worldPosition.below(2)), stack));
 		if (mode == Mode.BELT)
 			particleItems.forEach(stack -> makePressingParticleEffect(VecHelper.getCenterOf(worldPosition.below(2))
-					.add(0, 8 / 16f, 0), stack));
+				.add(0, 8 / 16f, 0), stack));
 		if (mode == Mode.WORLD)
 			particleItems.forEach(stack -> makePressingParticleEffect(VecHelper.getCenterOf(worldPosition.below(1))
 					.add(0, -1 / 4f, 0), stack));
@@ -289,10 +288,10 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 			return;
 		for (int i = 0; i < amount; i++) {
 			Vec3 motion = VecHelper.offsetRandomly(Vec3.ZERO, level.random, .125f)
-					.multiply(1, 0, 1);
+				.multiply(1, 0, 1);
 			motion = motion.add(0, amount != 1 ? 0.125f : 1 / 16f, 0);
 			level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, stack), pos.x, pos.y - .25f, pos.z, motion.x,
-					motion.y, motion.z);
+				motion.y, motion.z);
 		}
 	}
 
@@ -302,9 +301,9 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 			return;
 		for (int i = 0; i < 20; i++) {
 			Vec3 motion = VecHelper.offsetRandomly(Vec3.ZERO, level.random, .175f)
-					.multiply(1, 0, 1);
+				.multiply(1, 0, 1);
 			level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, stack), pos.x, pos.y, pos.z, motion.x,
-					motion.y + .25f, motion.z);
+				motion.y + .25f, motion.z);
 		}
 	}
 

@@ -176,7 +176,8 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 			if (onBasin())
 				applyOnBasin();
 
-			if (level.getBlockState(worldPosition.below(2)).getSoundType() == SoundType.WOOL)
+			if (level.getBlockState(worldPosition.below(2))
+				.getSoundType() == SoundType.WOOL)
 				AllSoundEvents.MECHANICAL_PRESS_ACTIVATION_ON_BELT.playOnServer(level, worldPosition);
 			else
 				AllSoundEvents.MECHANICAL_PRESS_ACTIVATION.playOnServer(level, worldPosition, .5f,
@@ -257,7 +258,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 				.add(0, 8 / 16f, 0), stack));
 		if (mode == Mode.WORLD)
 			particleItems.forEach(stack -> makePressingParticleEffect(VecHelper.getCenterOf(worldPosition.below(1))
-					.add(0, -1 / 4f, 0), stack));
+				.add(0, -1 / 4f, 0), stack));
 
 		particleItems.clear();
 	}

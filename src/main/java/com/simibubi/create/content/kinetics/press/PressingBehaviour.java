@@ -38,7 +38,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 	public int prevRunningTicks;
 	public int runningTicks;
 	public boolean running;
-	public boolean wentDown;
+	public boolean finished;
 	public Mode mode;
 
 	int entityScanCooldown;
@@ -72,7 +72,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 	public void read(CompoundTag compound, boolean clientPacket) {
 		running = compound.getBoolean("Running");
 		mode = Mode.values()[compound.getInt("Mode")];
-		wentDown = compound.getBoolean("WentDown");
+		finished = compound.getBoolean("Finished");
 		prevRunningTicks = runningTicks = compound.getInt("Ticks");
 		super.read(compound, clientPacket);
 
@@ -87,7 +87,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 	public void write(CompoundTag compound, boolean clientPacket) {
 		compound.putBoolean("Running", running);
 		compound.putInt("Mode", mode.ordinal());
-		compound.putBoolean("WentDown", wentDown);
+		compound.putBoolean("Finished", finished);
 		compound.putInt("Ticks", runningTicks);
 		super.write(compound, clientPacket);
 
@@ -110,7 +110,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 	public void start(Mode mode) {
 		this.mode = mode;
 		running = true;
-		wentDown = false;
+		finished = false;
 		prevRunningTicks = 0;
 		runningTicks = 0;
 		particleItems.clear();
@@ -174,7 +174,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 			return;
 		}
 
-		if (runningTicks >= CYCLE / 2 && !wentDown) {
+		if (runningTicks >= CYCLE / 2 && !finished) {
 			if (inWorld())
 				applyInWorld();
 			if (onBasin())
@@ -190,11 +190,11 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 			if (!level.isClientSide)
 				blockEntity.sendData();
 
-			wentDown = true;
+			finished = true;
 		}
 
 		if (!level.isClientSide && runningTicks > CYCLE) {
-			wentDown = false;
+			finished = false;
 			particleItems.clear();
 			specifics.onPressingCompleted();
 			blockEntity.sendData();

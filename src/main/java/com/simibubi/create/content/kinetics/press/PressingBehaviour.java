@@ -240,7 +240,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 		float speed = specifics.getKineticSpeed();
 		if (speed == 0)
 			return 0;
-		return 30 * speed / 256;
+		return 30 * Mth.abs(speed) / 256;
 	}
 
 	protected void spawnParticles() {

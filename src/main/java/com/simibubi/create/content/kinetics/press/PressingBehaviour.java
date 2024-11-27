@@ -190,7 +190,6 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 
 		if (!level.isClientSide && runningTicks > CYCLE) {
 			finished = true;
-			running = false;
 			particleItems.clear();
 			specifics.onPressingCompleted();
 			blockEntity.sendData();

@@ -38,7 +38,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 	public int prevRunningTicks;
 	public int runningTicks;
 	public boolean running;
-	public boolean finished;
+	public boolean wentDown;
 	public Mode mode;
 
 	int entityScanCooldown;
@@ -72,13 +72,13 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 	public void read(CompoundTag compound, boolean clientPacket) {
 		running = compound.getBoolean("Running");
 		mode = Mode.values()[compound.getInt("Mode")];
-		finished = compound.getBoolean("Finished");
+		wentDown = compound.getBoolean("WentDown");
 		prevRunningTicks = runningTicks = compound.getInt("Ticks");
 		super.read(compound, clientPacket);
 
 		if (clientPacket) {
 			NBTHelper.iterateCompoundList(compound.getList("ParticleItems", Tag.TAG_COMPOUND),
-				c -> particleItems.add(ItemStack.of(c)));
+					c -> particleItems.add(ItemStack.of(c)));
 			spawnParticles();
 		}
 	}
@@ -87,7 +87,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 	public void write(CompoundTag compound, boolean clientPacket) {
 		compound.putBoolean("Running", running);
 		compound.putInt("Mode", mode.ordinal());
-		compound.putBoolean("Finished", finished);
+		compound.putBoolean("WentDown", wentDown);
 		compound.putInt("Ticks", runningTicks);
 		super.write(compound, clientPacket);
 
@@ -110,6 +110,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 	public void start(Mode mode) {
 		this.mode = mode;
 		running = true;
+		wentDown = false;
 		prevRunningTicks = 0;
 		runningTicks = 0;
 		particleItems.clear();
@@ -128,38 +129,40 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 	public void tick() {
 		super.tick();
 
-		finished = false;
 		if (specifics.getKineticSpeed() == 0) {
 			running = false;
 			return;
 		}
 
 		Level level = getWorld();
+
+		if (level == null)
+			return;
+
 		BlockPos worldPosition = getPos();
 
-		if (!running || level == null) {
-			if (level != null && !level.isClientSide) {
+		if (!running) {
+			if (level.isClientSide)
+				return;
 
-				if (entityScanCooldown > 0)
-					entityScanCooldown--;
-				if (entityScanCooldown <= 0) {
-					entityScanCooldown = ENTITY_SCAN;
+			if (entityScanCooldown > 0)
+				entityScanCooldown--;
+			if (entityScanCooldown <= 0) {
+				entityScanCooldown = ENTITY_SCAN;
 
-					if (BlockEntityBehaviour.get(level, worldPosition.below(2),
+				if (BlockEntityBehaviour.get(level, worldPosition.below(2),
 						TransportedItemStackHandlerBehaviour.TYPE) != null)
-						return;
-					if (BasinBlock.isBasin(level, worldPosition.below(2)))
-						return;
+					return;
+				if (BasinBlock.isBasin(level, worldPosition.below(2)))
+					return;
 
-					for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class,
-						new AABB(worldPosition.below()).deflate(.125f))) {
-						if (!itemEntity.isAlive() || !itemEntity.onGround())
-							continue;
-						if (!specifics.tryProcessInWorld(itemEntity, true))
-							continue;
-						start(Mode.WORLD);
-						return;
-					}
+				for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, new AABB(worldPosition.below()).deflate(.125f))) {
+					if (!itemEntity.isAlive() || !itemEntity.onGround())
+						continue;
+					if (!specifics.tryProcessInWorld(itemEntity, true))
+						continue;
+					start(Mode.WORLD);
+					return;
 				}
 
 			}
@@ -171,7 +174,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 			return;
 		}
 
-		if (runningTicks == CYCLE / 2 && specifics.getKineticSpeed() != 0) {
+		if (runningTicks >= CYCLE / 2 && !wentDown) {
 			if (inWorld())
 				applyInWorld();
 			if (onBasin())
@@ -186,22 +189,22 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 
 			if (!level.isClientSide)
 				blockEntity.sendData();
+
+			wentDown = true;
 		}
 
 		if (!level.isClientSide && runningTicks > CYCLE) {
-			finished = true;
+			wentDown = false;
 			particleItems.clear();
 			specifics.onPressingCompleted();
 			blockEntity.sendData();
-			prevRunningTicks = runningTicks - 240;
-			runningTicks += getRunningTickSpeed() - 240;
+			runningTicks -= 240;
 			return;
 		}
 
 		prevRunningTicks = runningTicks;
 		runningTicks += getRunningTickSpeed();
 		if (prevRunningTicks < CYCLE / 2 && runningTicks >= CYCLE / 2) {
-			runningTicks = CYCLE / 2;
 			// Pause the ticks until a packet is received
 			if (level.isClientSide && !blockEntity.isVirtual())
 				runningTicks = -(CYCLE / 2);
@@ -257,13 +260,14 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 
 		if (mode == Mode.BASIN)
 			particleItems
-				.forEach(stack -> makeCompactingParticleEffect(VecHelper.getCenterOf(worldPosition.below(2)), stack));
+					.forEach(stack -> makeCompactingParticleEffect(VecHelper.getCenterOf(worldPosition.below(2)),
+							stack));
 		if (mode == Mode.BELT)
 			particleItems.forEach(stack -> makePressingParticleEffect(VecHelper.getCenterOf(worldPosition.below(2))
-				.add(0, 8 / 16f, 0), stack));
+					.add(0, 8 / 16f, 0), stack));
 		if (mode == Mode.WORLD)
 			particleItems.forEach(stack -> makePressingParticleEffect(VecHelper.getCenterOf(worldPosition.below(1))
-				.add(0, -1 / 4f, 0), stack));
+					.add(0, -1 / 4f, 0), stack));
 
 		particleItems.clear();
 	}
@@ -278,10 +282,10 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 			return;
 		for (int i = 0; i < amount; i++) {
 			Vec3 motion = VecHelper.offsetRandomly(Vec3.ZERO, level.random, .125f)
-				.multiply(1, 0, 1);
+					.multiply(1, 0, 1);
 			motion = motion.add(0, amount != 1 ? 0.125f : 1 / 16f, 0);
 			level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, stack), pos.x, pos.y - .25f, pos.z, motion.x,
-				motion.y, motion.z);
+					motion.y, motion.z);
 		}
 	}
 
@@ -291,9 +295,9 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 			return;
 		for (int i = 0; i < 20; i++) {
 			Vec3 motion = VecHelper.offsetRandomly(Vec3.ZERO, level.random, .175f)
-				.multiply(1, 0, 1);
+					.multiply(1, 0, 1);
 			level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, stack), pos.x, pos.y, pos.z, motion.x,
-				motion.y + .25f, motion.z);
+					motion.y + .25f, motion.z);
 		}
 	}
 

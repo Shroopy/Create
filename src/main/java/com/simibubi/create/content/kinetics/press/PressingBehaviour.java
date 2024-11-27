@@ -128,14 +128,18 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 	public void tick() {
 		super.tick();
 
+		finished = false;
+		if (specifics.getKineticSpeed() == 0) {
+			running = false;
+			return;
+		}
+
 		Level level = getWorld();
 		BlockPos worldPosition = getPos();
 
 		if (!running || level == null) {
 			if (level != null && !level.isClientSide) {
 
-				if (specifics.getKineticSpeed() == 0)
-					return;
 				if (entityScanCooldown > 0)
 					entityScanCooldown--;
 				if (entityScanCooldown <= 0) {
@@ -190,6 +194,8 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 			particleItems.clear();
 			specifics.onPressingCompleted();
 			blockEntity.sendData();
+			prevRunningTicks = runningTicks - 240;
+			runningTicks += getRunningTickSpeed() - 240;
 			return;
 		}
 

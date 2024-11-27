@@ -78,7 +78,7 @@ public class PressingBehaviour extends BeltProcessingBehaviour {
 
 		if (clientPacket) {
 			NBTHelper.iterateCompoundList(compound.getList("ParticleItems", Tag.TAG_COMPOUND),
-					c -> particleItems.add(ItemStack.of(c)));
+				c -> particleItems.add(ItemStack.of(c)));
 			spawnParticles();
 		}
 	}
